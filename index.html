@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pikachu Match Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="header">
+    <div class="left-controls">
+      <button id="restart-btn">🔄 Bắt đầu lại</button>
+      <button id="hint-btn">💡 Gợi ý</button>
+      <span id="hint-container">🎁 <span id="hint-count">3</span></span>
+    </div>
+    <div class="title">
+      <img class="logo" src="assets/images/logo/logo.png" alt="Logo" /> Pikachu Memory Match V1.0
+      <img class="logo" src="assets/images/logo/logo.png" alt="Logo" />
+    </div>
+    <div class="right-info">
+      <span>⏱️ <span id="timer">00:00</span></span>
+      <span>⭐ Điểm: <span id="score">0</span></span>
+    </div>
+  </div>
+
+  <div id="game-board" class="grid-container">
+    <!-- Lưới 12x12 sẽ được thêm bằng JS -->
+  </div>
+
+  <!-- Import script -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
