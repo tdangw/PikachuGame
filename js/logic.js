@@ -1,10 +1,10 @@
 // logic.js
 import { gameState } from './gameState.js';
-import { updateScoreUI } from './main.js';
+import { updateScoreUI, updateHintUI, updateTimerUI } from './main.js';
+import { formatTime } from './utils.js';
+import { drawLineBetweenTiles } from './canvas.js';
 
-let lastMatchTime = 0; // Thời điểm của lần match cuối cùng
-let matchCount = 0; // Số lần match liên tục
-let isChecking = false; // Biến trạng thái để kiểm soát hành vi click
+let isLevelCompleted = false; // Trạng thái hoàn thành màn chơi
 
 export function initLogic() {
   const tiles = document.querySelectorAll('.tile');
@@ -12,20 +12,21 @@ export function initLogic() {
 
   tiles.forEach(tile => {
     tile.addEventListener('click', () => {
-      // Kiểm tra trạng thái khóa và trạng thái của ô
-      if (gameState.isLocked || tile.classList.contains('matched') || tile.classList.contains('selected') || isChecking) return;
+      if (gameState.isLocked || tile.classList.contains('matched') || tile.classList.contains('selected')) return;
 
       tile.classList.remove('hidden');
       tile.classList.add('selected');
       selectedTiles.push(tile);
 
       if (selectedTiles.length === 2) {
-        isChecking = true; // Đặt trạng thái đang kiểm tra
         gameState.isLocked = true; // Khóa click trong lúc kiểm tra
+
+        // Gọi checkMatch ngay lập tức
+        checkMatch(selectedTiles);
+
+        // Đặt lại trạng thái sau 1 giây
         setTimeout(() => {
-          checkMatch(selectedTiles); // Kiểm tra 2 ô
-          selectedTiles = []; // Reset danh sách các ô được chọn
-          isChecking = false; // Đặt lại trạng thái
+          selectedTiles = [];
           gameState.isLocked = false; // Mở khóa click
         }, 1000);
       }
@@ -40,53 +41,45 @@ function checkMatch(selectedTiles) {
     // Nếu khớp
     tile1.classList.add('matched');
     tile2.classList.add('matched');
-    gameState.score += 10; // Cộng điểm
-    updateScoreUI(); // Cập nhật giao diện điểm số
 
-    // Cộng thêm thời gian khi match
+    // Vẽ đường nối giữa hai ô ngay lập tức
+    drawLineBetweenTiles(tile1, tile2);
+
+    // Cộng điểm và thời gian
+    gameState.score += 10; // Cộng 10 điểm
     gameState.timer += 5; // Cộng thêm 5 giây
-    document.getElementById('timer').innerText = formatTime(gameState.timer); // Cập nhật hiển thị thời gian
+    updateScoreUI(); // Cập nhật giao diện điểm
+    updateTimerUI(); // Cập nhật giao diện thời gian
 
-    // Hiển thị thông báo +5s tại vị trí của ô thứ hai
-    const plusTime = document.createElement('div');
-    plusTime.innerText = '+5s';
-    plusTime.style.position = 'absolute';
-    plusTime.style.color = 'green';
-    plusTime.style.fontWeight = 'bold';
-    plusTime.style.fontSize = '16px';
-    plusTime.style.top = `${tile2.offsetTop}px`;
-    plusTime.style.left = `${tile2.offsetLeft}px`;
-    plusTime.style.zIndex = '1000';
-    document.body.appendChild(plusTime);
+    // Hiển thị thông báo tại vị trí giữa hình ảnh thứ 2
+    const matchOverlay = document.createElement('div');
+    matchOverlay.innerHTML = `
+      <div>+5s</div>
+      <div>+10point</div>
+    `;
+    matchOverlay.style.position = 'absolute';
+    matchOverlay.style.top = `${tile2.offsetTop}px`; // Đặt vị trí top của ô thứ 2
+    matchOverlay.style.left = `${tile2.offsetLeft}px`; // Đặt vị trí left của ô thứ 2
+    matchOverlay.style.width = `${tile2.offsetWidth}px`; // Đặt chiều rộng bằng ô thứ 2
+    matchOverlay.style.height = `${tile2.offsetHeight}px`; // Đặt chiều cao bằng ô thứ 2
+    matchOverlay.style.display = 'flex';
+    matchOverlay.style.flexDirection = 'column';
+    matchOverlay.style.justifyContent = 'center';
+    matchOverlay.style.alignItems = 'center';
+    matchOverlay.style.backgroundColor = 'rgba(50, 205, 50, 0.9)'; // Màu nền xanh lá
+    matchOverlay.style.color = 'yellow'; // Màu chữ vàng
+    matchOverlay.style.fontSize = '13px';
+    matchOverlay.style.borderRadius = '5px';
+    matchOverlay.style.textAlign = 'center';
+    matchOverlay.style.zIndex = '1000';
+    matchOverlay.style.pointerEvents = 'none'; // Không cho phép click vào thông báo
+    document.body.appendChild(matchOverlay);
 
-    // Hiển thị thông báo +10p tại vị trí của ô thứ hai (bên cạnh +5s)
-    const plusPoints = document.createElement('div');
-    plusPoints.innerText = '+10p';
-    plusPoints.style.position = 'absolute';
-    plusPoints.style.color = 'blue';
-    plusPoints.style.fontWeight = 'bold';
-    plusPoints.style.fontSize = '16px';
-    plusPoints.style.top = `${tile2.offsetTop + 20}px`; // Dịch xuống một chút so với +5s
-    plusPoints.style.left = `${tile2.offsetLeft}px`;
-    plusPoints.style.zIndex = '1000';
-    document.body.appendChild(plusPoints);
-
-    // Xóa thông báo sau 1 giây
+    // Xóa thông báo sau 3 giây
     setTimeout(() => {
-      plusTime.remove();
-      plusPoints.remove();
-    }, 1000);
+      matchOverlay.remove();
+    }, 3000);
 
-    // Kiểm tra nếu tất cả các ô đã matched
-    const allMatched = Array.from(document.querySelectorAll('.tile')).every(tile => tile.classList.contains('matched'));
-    if (allMatched && !isLevelCompleted) {
-      isLevelCompleted = true;
-      alert('Bạn đã hoàn thành màn! Qua màn tiếp theo!');
-      gameState.hintCount++;
-      updateHintUI();
-      const currentLevel = parseInt(document.querySelector('.tile').dataset.level) || 1;
-      initGrid(currentLevel + 1);
-    }
   } else {
     // Nếu không khớp, ẩn lại các ô sau 1 giây
     setTimeout(() => {
@@ -98,8 +91,69 @@ function checkMatch(selectedTiles) {
   }
 }
 
-export function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+function handleLevelComplete() {
+  // Hiển thị hiệu ứng qua màn
+  const levelCompleteOverlay = document.createElement('div');
+  levelCompleteOverlay.innerText = `Level ${gameState.level} Completed!`;
+  levelCompleteOverlay.style.position = 'fixed';
+  levelCompleteOverlay.style.top = '50%';
+  levelCompleteOverlay.style.left = '50%';
+  levelCompleteOverlay.style.transform = 'translate(-50%, -50%)';
+  setMatchOverlayStyle(levelCompleteOverlay);
+  levelCompleteOverlay.style.padding = '20px 40px';
+  levelCompleteOverlay.style.fontSize = '24px';
+  levelCompleteOverlay.style.borderRadius = '10px';
+  levelCompleteOverlay.style.textAlign = 'center';
+  levelCompleteOverlay.style.zIndex = '1000';
+  document.body.appendChild(levelCompleteOverlay);
+
+  // Tính điểm thưởng
+  const bonusPoints = 100 + Math.floor(gameState.score / 2) + gameState.level * 2;
+  gameState.score += bonusPoints;
+  gameState.hintCount += 5; // Cộng thêm 5 lượt gợi ý
+  updateScoreUI();
+  updateHintUI();
+
+  // Hiển thị điểm thưởng và lượt gợi ý
+  const bonusOverlay = document.createElement('div');
+  bonusOverlay.innerHTML = `
+    <div>+${bonusPoints} điểm</div>
+    <div>+5 lượt gợi ý</div>
+  `;
+  bonusOverlay.style.position = 'fixed';
+  bonusOverlay.style.top = '60%';
+  bonusOverlay.style.left = '50%';
+  bonusOverlay.style.transform = 'translate(-50%, -50%)';
+  setMatchOverlayStyle(bonusOverlay);
+  bonusOverlay.style.padding = '10px 20px';
+  bonusOverlay.style.fontSize = '18px';
+  bonusOverlay.style.borderRadius = '10px';
+  bonusOverlay.style.textAlign = 'center';
+  bonusOverlay.style.zIndex = '1000';
+  document.body.appendChild(bonusOverlay);
+
+  // Xóa hiệu ứng sau 1 giây
+  setTimeout(() => {
+    levelCompleteOverlay.remove();
+    bonusOverlay.remove();
+    goToNextLevel(); // Chuyển sang màn tiếp theo
+  }, 1000);
+}
+
+function goToNextLevel() {
+  gameState.level = (gameState.level || 1) + 1; // Tăng level
+  gameState.timer = DEFAULT_TIMER; // Đặt lại thời gian
+  gameState.isLocked = false; // Mở khóa click
+  isLevelCompleted = false; // Đặt lại trạng thái hoàn thành màn chơi
+
+  // Khởi tạo lưới mới
+  const gameBoard = document.getElementById('game-board');
+  gameBoard.innerHTML = ''; // Xóa lưới cũ
+  initGrid(gameState.level); // Khởi tạo lưới mới với level hiện tại
+  initLogic(); // Khởi tạo logic mới
+}
+
+function setMatchOverlayStyle(overlay, backgroundColor = 'rgba(0, 0, 0, 0.8)', color = 'white') {
+  overlay.style.backgroundColor = backgroundColor;
+  overlay.style.color = color;
 }

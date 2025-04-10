@@ -1,0 +1,114 @@
+1. Chuẩn bị dự án
+Đảm bảo tất cả các file của game (HTML, CSS, JavaScript, hình ảnh, v.v.) nằm trong một thư mục duy nhất, ví dụ: PikachuGame.
+File chính của game phải là index.html vì GitHub Pages sẽ tự động tìm file này để hiển thị.
+2. Tạo repository trên GitHub
+Truy cập GitHub và đăng nhập vào tài khoản của bạn.
+Nhấn vào nút + ở góc trên bên phải và chọn New repository.
+Điền thông tin:
+Repository name: PikachuGame (hoặc tên bạn muốn).
+Visibility: Chọn Public để mọi người có thể truy cập.
+Nhấn Create repository.
+3. Tải dự án lên GitHub
+Cách 1: Sử dụng Git trên máy tính
+
+.Mở Git Bash (hoặc terminal) và điều hướng đến thư mục chứa game của bạn: cd path/to/PikachuGame
+.Khởi tạo Git trong thư mục: git init
+.Kết nối với repository trên GitHub: git remote add origin https://github.com/<your-username>/PikachuGame.git
+.Thêm tất cả file vào Git: git add .
+.Commit thay đổi: git commit -m "Initial commit"
+.Đẩy file lên GitHub: git branch -M main
+git push -u origin main
+
+Cách 2: Tải lên trực tiếp trên GitHub
+Trong repository vừa tạo, chọn Add file > Upload files.
+Kéo thả toàn bộ file trong thư mục game của bạn vào trình duyệt.
+Nhấn Commit changes để tải lên.
+
+4. Kích hoạt GitHub Pages
+.Trong repository của bạn, vào tab Settings.
+.Trong menu bên trái, chọn Pages.
+.Trong phần Source, chọn nhánh main (hoặc master) và thư mục gốc (/root).
+.Nhấn Save.
+.Sau vài giây, bạn sẽ thấy một liên kết như sau: https://<your-username>.github.io/PikachuGame/
+Đây là liên kết để chơi game trực tiếp trên web.
+5. Kiểm tra game
+Truy cập liên kết GitHub Pages mà bạn vừa tạo.
+Nếu game không hiển thị đúng, kiểm tra:
+Đường dẫn file (hình ảnh, CSS, JS) trong index.html phải là tương đối (ví dụ: ./assets/image.png).
+Đảm bảo file index.html nằm ở thư mục gốc của repository.
+6. Cập nhật game
+Khi bạn muốn cập nhật game:
+
+.Thực hiện thay đổi trong thư mục dự án trên máy tính.
+.Đẩy thay đổi lên GitHub:
+git add .
+git commit -m "Update game"
+git push
+
+.GitHub Pages sẽ tự động cập nhật.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

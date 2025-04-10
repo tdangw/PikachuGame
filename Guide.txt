@@ -78,6 +78,7 @@ Load ảnh từ thư mục khác	utils.js → generateImageList
 Giao diện tile, hover, màu nền	style.css
 Thêm nút mới	index.html, xử lý trong main.js
 Gợi ý (Hint)	main.js → showHint()
+////
 
 
 

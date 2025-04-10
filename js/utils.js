@@ -1,14 +1,14 @@
 // utils.js
 
 /**
- * Xáo trộn một mảng theo thuật toán Fisher-Yates
+ * Trộn ngẫu nhiên một mảng
+ * @param {Array} array - Mảng cần trộn
  */
 export function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
-  return array;
 }
 
 /**
