@@ -1,0 +1,98 @@
+1. index.html
+Chứa layout lưới game (div chính), liên kết tới các file JS/CSS.
+
+Đây là nơi khởi chạy game và nơi gắn khung HTML.
+
+2. style.css
+Quản lý toàn bộ màu nền, size ảnh, hiệu ứng hover, layout.
+
+Nên chia theo: .tile, .selected, .matched, .line-path, v.v.
+
+3. js/main.js
+Tập trung gọi initGrid() từ grid.js, xử lý sự kiện click chuột, kết nối các module.
+
+Đây là trung tâm của toàn bộ game.
+
+4. js/grid.js
+Tạo danh sách 144 ô từ 72 ảnh ×2, xáo trộn, gắn vào DOM.
+
+Quản lý việc tạo/làm mới lại lưới.
+
+5. js/logic.js
+Xử lý click chọn cặp ô
+
+So sánh nếu giống nhau → báo matched → gọi ẩn
+
+Nếu không giống → hủy chọn
+
+6. js/connector.js
+Xử lý "đường đi nối" giữa 2 ô (tối đa 3 đoạn gấp khúc, giống game Pikachu cổ điển).
+
+Có thể vẽ canvas hoặc thêm class .line-path nếu cần hiệu ứng nối.
+
+7. js/utils.js
+Hàm xáo trộn mảng, chuyển tên file ảnh từ số → chuỗi, hỗ trợ tính toán index, v.v.
+
+////////////////////////////////////////////////////////////////////////////////////
+Mở rộng tính năng sau này thì sao?
+Tính năng	File cần thêm sửa
+Thêm level, điểm số	main.js, logic.js
+Thêm âm thanh	main.js hoặc file riêng sound.js
+Thêm hiệu ứng nối đường	connector.js
+Làm lại giao diện, bố cục	style.css, index.html
+Reset game hoặc chơi lại	main.js, grid.js
+Gợi ý (hint)	logic.js, connector.js
+/////////////////////////////////////////
+File utils.js
+Dùng cho các hàm tiện ích chung: xáo trộn mảng, định dạng thời gian, load ảnh…
+
+Chức năng & mở rộng:
+Muốn thêm log, test ảnh → chỉnh generateImageList()
+
+Dùng được cho nhiều module khác (import { ... } from './utils.js')
+////
+File grid.js
+Sinh lưới 12x12 từ 72 ảnh, mỗi ảnh dùng 2 lần, gắn vào DOM
+
+Chức năng & mở rộng:
+Sửa gridSize = 12 nếu sau này đổi kích thước
+
+Muốn thay đổi cách load ảnh (vd: ảnh sprite sheet) thì chỉnh trong generateImageList hoặc tile.appendChild(img)
+////
+File logic.js
+Xử lý chọn 2 ô, so sánh ảnh, nếu đúng thì ẩn, sai thì lật lại
+
+Chức năng & mở rộng:
+Muốn thêm âm thanh khi khớp → thêm playSound() trong phần if matched
+
+Sửa điểm thưởng → chỉnh score += 10
+////
+File main.js
+ Gắn nút "Bắt đầu lại", "Gợi ý", cập nhật thời gian, điểm
+
+chỉnh tính năng ở đâu?
+Chức năng	Sửa tại file
+Tăng điểm / reset điểm	logic.js, main.js
+Tạo lại lưới	grid.js
+Load ảnh từ thư mục khác	utils.js → generateImageList
+Giao diện tile, hover, màu nền	style.css
+Thêm nút mới	index.html, xử lý trong main.js
+Gợi ý (Hint)	main.js → showHint()
+////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
