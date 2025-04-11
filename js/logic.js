@@ -1,5 +1,3 @@
-// logic.js
-
 import { gameState } from './gameState.js';
 import { updateScore, updateHint, updateTimer } from './ui.js';
 import { drawLineBetweenTiles } from './canvas.js';
@@ -8,48 +6,71 @@ import {
   showMatchOverlay,
   showLevelCompleteOverlay,
   showBonusOverlay,
-  showLevelStartOverlay,
+  showLevelStartOverlay, // ⚠️ HÀM NÀY PHẢI RETURN OVERLAY ĐỂ REMOVE ĐƯỢC
 } from './ui.js';
 
 const DEFAULT_TIMER = 600;
-const LEVEL_INTRO_DURATION = 3000; // Thời gian hiện overlay giới thiệu level (ms)
-const IMAGE_PREVIEW_DURATION = 3000; // Thời gian hiện ảnh trước khi ẩn (ms)
+const LEVEL_INTRO_DURATION = 3000;
+const IMAGE_PREVIEW_DURATION = 3000;
 
 let isLevelCompleted = false;
+let selectedTiles = [];
 
-// Khởi tạo logic khi bắt đầu
+/**
+ * Khởi tạo logic bắt sự kiện click các ô
+ */
 export function initLogic() {
   const tiles = document.querySelectorAll('.tile');
-  let selectedTiles = [];
 
   tiles.forEach((tile) => {
-    tile.addEventListener('click', () => {
-      if (
-        gameState.isLocked ||
-        tile.classList.contains('matched') ||
-        tile.classList.contains('selected')
-      )
-        return;
+    // Xóa event listener cũ nếu có
+    tile.replaceWith(tile.cloneNode(true));
+  });
 
-      tile.classList.remove('hidden'); // Hiện hình khi click
-      tile.classList.add('selected');
-      selectedTiles.push(tile);
-
-      if (selectedTiles.length === 2) {
-        gameState.isLocked = true;
-        checkMatch(selectedTiles);
-
-        setTimeout(() => {
-          selectedTiles = [];
-          gameState.isLocked = false;
-        }, 1000);
-      }
-    });
+  const refreshedTiles = document.querySelectorAll('.tile');
+  refreshedTiles.forEach((tile) => {
+    tile.addEventListener('click', () => handleTileClick(tile));
   });
 }
 
-// Kiểm tra ghép cặp
-function checkMatch([tile1, tile2]) {
+/**
+ * Hàm xử lý khi click 1 ô
+ */
+function handleTileClick(tile) {
+  if (
+    gameState.isLocked ||
+    tile.classList.contains('matched') ||
+    tile.classList.contains('selected')
+  )
+    return;
+
+  tile.classList.remove('hidden');
+  tile.classList.add('selected');
+  selectedTiles.push(tile);
+
+  const unmatchedTiles = document.querySelectorAll('.tile:not(.matched)');
+
+  // Ô lẻ cuối cùng
+  if (unmatchedTiles.length === 1 && selectedTiles.length === 1) {
+    handleLastTile(tile);
+    return;
+  }
+
+  if (selectedTiles.length === 2) {
+    gameState.isLocked = true;
+    checkMatch(selectedTiles[0], selectedTiles[1]);
+
+    setTimeout(() => {
+      selectedTiles = [];
+      gameState.isLocked = false;
+    }, 800);
+  }
+}
+
+/**
+ * Kiểm tra 2 ô có khớp hình không
+ */
+function checkMatch(tile1, tile2) {
   if (tile1.dataset.imgId === tile2.dataset.imgId) {
     tile1.classList.add('matched');
     tile2.classList.add('matched');
@@ -62,34 +83,75 @@ function checkMatch([tile1, tile2]) {
 
     showMatchOverlay(tile2, 5, 10);
 
-    if (
-      document.querySelectorAll('.tile:not(.matched)').length === 0 &&
-      !isLevelCompleted
-    ) {
-      isLevelCompleted = true;
-      setTimeout(handleLevelComplete, 600);
-    }
+    checkLevelComplete();
   } else {
     handleWrongSelection(tile1, tile2);
-    setTimeout(() => {
-      tile1.classList.add('hidden');
-      tile2.classList.add('hidden');
-      tile1.classList.remove('selected', 'wrong');
-      tile2.classList.remove('selected', 'wrong');
-    }, 1000);
   }
 }
 
+/**
+ * Xử lý khi chọn sai
+ */
 function handleWrongSelection(tile1, tile2) {
   tile1.classList.add('wrong');
   tile2.classList.add('wrong');
+
+  setTimeout(() => {
+    tile1.classList.add('hidden');
+    tile2.classList.add('hidden');
+    tile1.classList.remove('selected', 'wrong');
+    tile2.classList.remove('selected', 'wrong');
+  }, 800);
 }
 
-// Xử lý khi qua màn
+/**
+ * Xử lý ô lẻ cuối cùng (auto matched, tính điểm + bonus)
+ */
+function handleLastTile(tile) {
+  gameState.isLocked = true;
+
+  tile.classList.remove('hidden', 'selected');
+  tile.classList.add('matched', 'last-tile-bonus');
+
+  const bonusRandom = Math.floor(Math.random() * 100) + 1;
+  const bonus =
+    bonusRandom * (gameState.hintCount || 1) * (gameState.timer || 1);
+
+  gameState.score += bonus;
+  updateScore(gameState.score);
+
+  gameState.hintCount += 1;
+  updateHint(gameState.hintCount);
+
+  showMatchOverlay(tile, 1, bonus, 'Ô Lẻ! +1 Gợi ý');
+
+  createParticles(tile, 20);
+
+  checkLevelComplete();
+}
+
+/**
+ * Kiểm tra khi đã matched hết hoặc còn 1 ô
+ */
+function checkLevelComplete() {
+  const unmatched = document.querySelectorAll('.tile:not(.matched)');
+  if ((unmatched.length === 0 || unmatched.length === 1) && !isLevelCompleted) {
+    isLevelCompleted = true;
+    setTimeout(handleLevelComplete, 600);
+  }
+}
+
+/**
+ * Xử lý khi qua màn chơi
+ */
 function handleLevelComplete() {
-  const levelOverlay = showLevelCompleteOverlay(gameState.level);
+  const overlay = showLevelCompleteOverlay(gameState.level);
   const bonusPoints =
-    100 + Math.floor(gameState.score / 2) + gameState.level * 2;
+    10 +
+    Math.floor(gameState.score / 2) +
+    gameState.level +
+    gameState.hintCount +
+    gameState.timer;
 
   gameState.score += bonusPoints;
   gameState.hintCount += 5;
@@ -99,13 +161,15 @@ function handleLevelComplete() {
   const bonusOverlay = showBonusOverlay(bonusPoints, 5);
 
   setTimeout(() => {
-    levelOverlay.remove();
+    overlay.remove();
     bonusOverlay.remove();
     goToNextLevel();
   }, 1000);
 }
 
-// Tăng level và khởi tạo lại lưới, xử lý hiển thị hình trong 3s
+/**
+ * Chuyển sang màn chơi kế tiếp
+ */
 export function goToNextLevel(startFromLevel1 = false) {
   gameState.level = startFromLevel1 ? 1 : (gameState.level || 1) + 1;
   gameState.timer = DEFAULT_TIMER;
@@ -115,22 +179,22 @@ export function goToNextLevel(startFromLevel1 = false) {
   const gameBoard = document.getElementById('game-board');
   gameBoard.innerHTML = '';
 
+  // ✅ Khởi tạo lưới trước
   initGrid(gameState.level);
 
-  const overlay = showLevelStartOverlay(
-    gameState.level,
-    gameState.score,
-    gameState.hintCount,
-    gameState.timer
-  );
-
-  // Giai đoạn 1: chờ LEVEL_INTRO_DURATION trước khi bắt đầu hiện ảnh
+  // ✅ Sau khi khởi tạo xong, delay rồi mới xử lý tiếp
   setTimeout(() => {
-    if (overlay) overlay.remove();
+    const overlay = showLevelStartOverlay(
+      gameState.level,
+      gameState.score,
+      gameState.hintCount,
+      gameState.timer
+    );
 
+    // ✅ Lấy lại tất cả tile sau khi đã có lưới
     const allTiles = document.querySelectorAll('.tile');
 
-    // Giai đoạn 2: Hiện ảnh có hiệu ứng mờ dần
+    // ✅ Bắt đầu preview hình
     allTiles.forEach((tile, i) => {
       tile.classList.remove('hidden');
       tile.style.opacity = 0;
@@ -140,7 +204,7 @@ export function goToNextLevel(startFromLevel1 = false) {
       }, i * 20);
     });
 
-    // Sau IMAGE_PREVIEW_DURATION thì ẩn lại và bắt đầu game
+    // ✅ Kết thúc preview -> ẩn các ô chưa matched
     setTimeout(() => {
       allTiles.forEach((tile) => {
         if (!tile.classList.contains('matched')) {
@@ -150,17 +214,51 @@ export function goToNextLevel(startFromLevel1 = false) {
         tile.style.transition = '';
       });
 
+      // 🛠️ FIX: overlay giờ đã được return trong ui.js nên remove được
+      if (overlay) overlay.remove();
+
       gameState.isLocked = false;
-      initLogic();
+      initLogic(); // ✅ Gắn lại sự kiện click
     }, IMAGE_PREVIEW_DURATION);
   }, LEVEL_INTRO_DURATION);
 }
 
-// Hàm định dạng thời gian
+/**
+ * Định dạng thời gian kiểu mm:ss
+ */
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60)
     .toString()
     .padStart(2, '0');
   const s = (seconds % 60).toString().padStart(2, '0');
   return `${m}:${s}`;
+}
+
+/**
+ * Hiệu ứng hạt khi ăn ô đặc biệt
+ */
+function createParticles(targetTile, count = 15) {
+  const tileRect = targetTile.getBoundingClientRect();
+  const board = document.getElementById('game-board');
+
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+
+    const left =
+      tileRect.left +
+      tileRect.width / 2 +
+      (Math.random() * tileRect.width - tileRect.width / 2);
+    const top =
+      tileRect.top +
+      tileRect.height / 2 +
+      (Math.random() * tileRect.height - tileRect.height / 2);
+
+    particle.style.left = `${left}px`;
+    particle.style.top = `${top}px`;
+
+    document.body.appendChild(particle);
+
+    setTimeout(() => particle.remove(), 1500);
+  }
 }

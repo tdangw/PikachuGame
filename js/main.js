@@ -5,15 +5,17 @@ import { initLogic } from './logic.js';
 import { formatTime } from './utils.js';
 import { gameState, DEFAULT_TIMER } from './gameState.js';
 import { drawLineBetweenTiles } from './canvas.js';
-import { goToNextLevel } from './logic.js';
 import {
   updateScore,
   updateTimer,
   updateHint,
   startHintCountdown,
 } from './ui.js';
+import { showLevelStartOverlay } from './ui.js';
 
 let interval;
+let roundsWon = 0; // Số vòng đã thắng liên tiếp
+let gridSize = 2; // Kích thước lưới khởi đầu là 2x2
 
 // Tự động scale game theo kích thước màn hình
 function autoScaleGame() {
@@ -53,10 +55,17 @@ function startTimer() {
   }, 1000);
 }
 
-// Khởi động lại game
+// Khởi động lại game toàn bộ
 function restartGame() {
-  goToNextLevel(true); // Khởi tạo level mới và hiển thị thông báo
+  gameState.level = 1;
+  gridSize = 2;
+  roundsWon = 0;
 
+  setupLevel();
+}
+
+// Cài đặt level hiện tại
+function setupLevel() {
   gameState.isLocked = false;
   gameState.score = 0;
   gameState.timer = DEFAULT_TIMER;
@@ -66,9 +75,15 @@ function restartGame() {
   updateHint(gameState.hintCount);
   updateTimer(gameState.timer, formatTime);
 
-  initGrid(); // Sinh lại lưới ảnh
-  initLogic(); // Kích hoạt chọn hình và kiểm tra
-  startTimer(); // Bắt đầu lại đồng hồ
+  initGrid(gridSize); // Truyền gridSize tùy vào level
+  initLogic();
+  startTimer();
+  showLevelStartOverlay(
+    gameState.level,
+    gameState.score,
+    gameState.hintCount,
+    gameState.timer
+  );
 }
 
 // Gợi ý 1 cặp hình giống nhau
@@ -127,7 +142,19 @@ function showHint() {
   }
 }
 
+// Khi thắng 1 màn sẽ gọi hàm này
+export function onLevelComplete() {
+  roundsWon++;
+  if (roundsWon >= 3 && gridSize < 12) {
+    gridSize += 2;
+    roundsWon = 0;
+  }
+  gameState.level++;
+  setupLevel();
+}
+
 // Gán sự kiện nút
+
 document.getElementById('restart-btn')?.addEventListener('click', restartGame);
 document.getElementById('hint-btn')?.addEventListener('click', showHint);
 
@@ -135,6 +162,7 @@ document.getElementById('hint-btn')?.addEventListener('click', showHint);
 window.addEventListener('resize', autoScaleGame);
 
 // Khi DOM đã sẵn sàng, bắt đầu game
+
 document.addEventListener('DOMContentLoaded', () => {
   autoScaleGame();
   restartGame();
