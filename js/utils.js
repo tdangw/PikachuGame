@@ -1,33 +1,44 @@
 // utils.js
 
 /**
- * Trộn ngẫu nhiên một mảng
- * @param {Array} array - Mảng cần trộn
+ * Tạo một số nguyên ngẫu nhiên trong khoảng [min, max].
+ * @param {number} min - Giá trị nhỏ nhất (bao gồm).
+ * @param {number} max - Giá trị lớn nhất (bao gồm).
+ * @returns {number} Số nguyên ngẫu nhiên.
  */
-export function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
+export function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**
- * Định dạng thời gian từ giây thành mm:ss
+ * Xáo trộn ngẫu nhiên các phần tử trong một mảng (thuật toán Fisher-Yates).
+ * @param {Array} arr - Mảng cần xáo trộn.
+ * @returns {Array} Mảng đã được xáo trộn.
+ */
+export function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]; // Hoán đổi các phần tử
+  }
+  return arr;
+}
+
+/**
+ * Định dạng thời gian từ số giây thành định dạng "phút:giây".
+ * Ví dụ: 65 giây -> "1:05".
+ * @param {number} seconds - Tổng số giây.
+ * @returns {string} Chuỗi định dạng thời gian.
  */
 export function formatTime(seconds) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes}:${secs < 10 ? '0' + secs : secs}`;
 }
 
 /**
- * Sinh danh sách ảnh Pikachu từ Pikachu (1).png đến Pikachu (72).png
+ * Tạo một ID ngẫu nhiên cho các phần tử (ví dụ: ô).
+ * @returns {string} Chuỗi ID ngẫu nhiên.
  */
-export function generateImageList() {
-  const list = [];
-  for (let i = 1; i <= 72; i++) {
-    const fileName = `assets/images/Pikachu (${i}).png`;
-    list.push(fileName);
-  }
-  return list;
+export function generateRandomID() {
+  return 'tile-' + Math.floor(Math.random() * 1000000);
 }

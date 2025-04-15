@@ -2,99 +2,119 @@ import { shuffleArray } from './utils.js';
 import { gameState } from './gameState.js';
 import { initLogic } from './logic.js';
 
-const IMAGE_COUNT = 72; // Tổng số ảnh Pikachu có sẵn (1–72)
+const MAX_IMAGE_ID = 72;
 export let gridData = [];
 
-export function initGrid(gridSize = 2, level = 1) {
-  const gameBoard = document.getElementById('game-board');
-  gameBoard.innerHTML = ''; // Xóa toàn bộ lưới cũ
-  gameBoard.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-
+/**
+ * Tạo lưới game theo level hiện tại
+ * @param {number} level
+ */
+export function createGrid(level = 1) {
+  const gridSize = Math.min(level, 12);
   const totalTiles = gridSize * gridSize;
-  const imageIds = [];
+  const numberOfPairs = Math.floor(totalTiles / 2);
 
-  // Sinh danh sách ảnh ghép cặp
-  for (let i = 1; i <= Math.floor(totalTiles / 2); i++) {
-    const id = ((i - 1) % IMAGE_COUNT) + 1;
-    imageIds.push(id, id); // Ghép đôi
-  }
+  // Tạo danh sách ảnh từ 1–72 và xáo trộn
+  const availableImages = Array.from({ length: MAX_IMAGE_ID }, (_, i) => i + 1);
+  shuffleArray(availableImages);
 
-  // Nếu lưới có số ô lẻ → thêm ảnh đặc biệt
-  let specialImageId = null;
-  let specialImageIndex = -1;
+  // Chọn ảnh không trùng → mỗi ảnh dùng đúng 2 lần
+  const selectedImages = availableImages.slice(0, numberOfPairs);
+  let imageIds = [];
+  selectedImages.forEach((id) => {
+    imageIds.push(id, id);
+  });
+
+  // Nếu số ô là lẻ → thêm 1 ô lẻ bonus
+  let bonusImageId = null;
+  let bonusTileIndex = null;
+
   if (totalTiles % 2 !== 0) {
-    specialImageId = (Math.floor(totalTiles / 2) % IMAGE_COUNT) + 1;
-    imageIds.push(specialImageId); // Hình không ghép
+    bonusImageId = availableImages[numberOfPairs]; // ảnh tiếp theo chưa dùng
+    imageIds.push(bonusImageId);
   }
 
-  shuffleArray(imageIds); // Trộn thứ tự ảnh
+  // Trộn mảng ảnh cuối cùng
+  shuffleArray(imageIds);
 
-  // Xác định vị trí hình đặc biệt
-  if (specialImageId !== null) {
-    specialImageIndex = imageIds.indexOf(specialImageId);
-  }
+  // Chuẩn bị DOM
+  gridData = [];
+  const gridContainer = document.getElementById('grid-container');
+  if (!gridContainer) return;
 
-  gridData = []; // Reset dữ liệu grid
+  gridContainer.innerHTML = '';
+  gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+  gridContainer.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
 
-  for (let row = 0; row < gridSize; row++) {
-    const rowData = [];
+  imageIds.forEach((imageId, idx) => {
+    const row = Math.floor(idx / gridSize);
+    const col = idx % gridSize;
+    const tileId = `tile-${row}-${col}`;
 
-    for (let col = 0; col < gridSize; col++) {
-      const idx = row * gridSize + col;
-      const imgId = imageIds[idx] || 0;
-      rowData.push(imgId);
+    const tile = document.createElement('div');
+    tile.classList.add('tile');
+    tile.id = tileId;
 
-      const tile = document.createElement('div');
-      tile.classList.add('tile');
-      tile.dataset.imgId = imgId;
+    const img = document.createElement('img');
+    img.src = `assets/images/level${level}/Pikachu (${imageId}).png`;
+    img.alt = `Pikachu ${imageId}`;
+    img.draggable = false;
+    img.classList.add('hidden');
 
-      // Gắn thêm nếu là ô lẻ (ô bonus)
-      if (specialImageId !== null && idx === specialImageIndex) {
-        tile.dataset.isOddTile = 'true';
-        tile.classList.add('last-tile-bonus');
-        tile.innerHTML += `<div class="bonus-glow"></div>`; // Hiệu ứng glow
-      }
+    tile.dataset.imageId = imageId;
+    tile.dataset.isBonus = 'false';
 
-      if (imgId > 0) {
-        const img = document.createElement('img');
-        img.src = `assets/images/level${level}/Pikachu (${imgId}).png`;
-        img.alt = `Pikachu ${imgId}`;
-        img.draggable = false;
-        tile.appendChild(img);
-      }
+    let isBonus = false;
 
-      gameBoard.appendChild(tile);
+    if (
+      bonusImageId !== null &&
+      imageId === bonusImageId &&
+      bonusTileIndex === null
+    ) {
+      // ✅ Chỉ gán 1 ô duy nhất làm bonus
+      tile.dataset.isBonus = 'true';
+      isBonus = true;
+      bonusTileIndex = idx;
+
+      console.log(`[🎯 BONUS TILE] id=${tileId}, imageId=${bonusImageId}`);
     }
 
-    gridData.push(rowData);
-  }
+    tile.appendChild(img);
+    gridContainer.appendChild(tile);
 
-  // Hiện toàn bộ ảnh trước → ẩn lại
+    // Lưu dữ liệu cho game logic
+    gridData.push({
+      id: tileId,
+      imageId,
+      isBonus,
+      isMatched: false,
+    });
+  });
+
+  // ✅ Preview ảnh trước khi bắt đầu
   setTimeout(() => {
     revealAndHideTiles();
   }, 0);
 }
 
 /**
- * Hiện ảnh trong 3 giây đầu, rồi ẩn lại (trừ ảnh matched)
+ * Hiển thị tất cả ảnh trong 3s rồi ẩn lại nếu chưa matched
  */
 function revealAndHideTiles() {
-  const allTiles = document.querySelectorAll('.tile');
-
-  allTiles.forEach((tile) => {
-    tile.classList.remove('hidden');
-  });
+  const allImgs = document.querySelectorAll('.tile img');
+  allImgs.forEach((img) => img.classList.remove('hidden'));
 
   gameState.isLocked = true;
 
   setTimeout(() => {
-    allTiles.forEach((tile) => {
-      if (!tile.classList.contains('matched')) {
-        tile.classList.add('hidden');
+    allImgs.forEach((img) => {
+      const parent = img.parentElement;
+      if (!parent.classList.contains('matched')) {
+        img.classList.add('hidden');
       }
     });
 
     gameState.isLocked = false;
-    initLogic(); // Gắn lại sự kiện click
+    initLogic();
   }, 3000);
 }

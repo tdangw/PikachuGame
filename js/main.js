@@ -1,169 +1,131 @@
-// main.js
+// main.js - Xử lý chính game flow, gợi ý, khởi động level
 
-import { initGrid } from './grid.js';
-import { initLogic } from './logic.js';
-import { formatTime } from './utils.js';
-import { gameState, DEFAULT_TIMER } from './gameState.js';
-import { drawLineBetweenTiles } from './canvas.js';
+import { createGrid } from './grid.js';
 import {
-  updateScore,
-  updateTimer,
-  updateHint,
-  startHintCountdown,
+  updateLevelDisplay,
+  updateScoreDisplay,
+  updateHintDisplay,
+  showBonusOverlay,
 } from './ui.js';
-import { showLevelStartOverlay } from './ui.js';
+import { gameState, resetGame } from './gameState.js';
+import { applySettingsAndStartGame } from './settings.js';
+import { checkLevelComplete, initLogic } from './logic.js';
 
-let interval;
-let roundsWon = 0; // Số vòng đã thắng liên tiếp
-let gridSize = 2; // Kích thước lưới khởi đầu là 2x2
+// Giao diện khi load
+import { createMainMenu } from './mainmenu.js';
+window.onload = () => createMainMenu();
 
-// Tự động scale game theo kích thước màn hình
-function autoScaleGame() {
+/**
+ * Khởi tạo màn chơi tương ứng với level
+ */
+export function initializeLevel(level) {
+  console.log(`[🧩 INIT] Tạo lưới cho level ${level}`);
+
+  gameState.currentLevel = level;
+
+  // Hiển thị container chơi game
   const gameContainer = document.getElementById('game-container');
-  if (!gameContainer) return;
+  if (gameContainer) gameContainer.style.display = 'flex';
 
-  const screenWidth = window.innerWidth;
-  const screenHeight = window.innerHeight;
+  updateLevelDisplay(level);
+  updateScoreDisplay(gameState.score);
+  updateHintDisplay(gameState.hints || 0);
 
-  const baseWidth = 960;
-  const baseHeight = 720;
-
-  const scaleX = screenWidth / baseWidth;
-  const scaleY = screenHeight / baseHeight;
-  const scale = Math.min(scaleX, scaleY);
-
-  gameContainer.style.transform = `scale(${scale})`;
-  gameContainer.style.transformOrigin = 'top left';
-
-  const offsetX = (screenWidth - baseWidth * scale) / 2;
-  const offsetY = (screenHeight - baseHeight * scale) / 2;
-  gameContainer.style.position = 'absolute';
-  gameContainer.style.left = `${offsetX}px`;
-  gameContainer.style.top = `${offsetY}px`;
+  const gridSize = Math.min(level, 12);
+  createGrid(gridSize);
+  initLogic(); // ✅ Gắn sự kiện click vào ô
 }
 
-// Bắt đầu đếm thời gian (mỗi giây trừ 1)
-function startTimer() {
-  clearInterval(interval);
-  interval = setInterval(() => {
-    gameState.timer--;
-    updateTimer(gameState.timer, formatTime);
-    if (gameState.timer <= 0) {
-      clearInterval(interval);
-      alert('⏰ Thời gian đã hết!');
-    }
-  }, 1000);
+/**
+ * Chuyển sang màn tiếp theo
+ */
+export function nextLevel() {
+  gameState.currentLevel++;
+  console.log(`[📤 nextLevel()] Chuyển sang level ${gameState.currentLevel}`);
+  initializeLevel(gameState.currentLevel);
 }
 
-// Khởi động lại game toàn bộ
-function restartGame() {
-  gameState.level = 1;
-  gridSize = 2;
-  roundsWon = 0;
-
-  setupLevel();
-}
-
-// Cài đặt level hiện tại
-function setupLevel() {
-  gameState.isLocked = false;
-  gameState.score = 0;
-  gameState.timer = DEFAULT_TIMER;
-  gameState.hintCount = gameState.defaultHintCount;
-
-  updateScore(gameState.score);
-  updateHint(gameState.hintCount);
-  updateTimer(gameState.timer, formatTime);
-
-  initGrid(gridSize); // Truyền gridSize tùy vào level
-  initLogic();
-  startTimer();
-  showLevelStartOverlay(
-    gameState.level,
-    gameState.score,
-    gameState.hintCount,
-    gameState.timer
-  );
-}
-
-// Gợi ý 1 cặp hình giống nhau
-function showHint() {
-  if (gameState.isLocked) {
-    alert('⛔ Đừng bấm quá nhanh!');
+/**
+ * Tìm cặp để gợi ý khi người chơi bấm nút "Gợi ý"
+ */
+function handleHintClick() {
+  if (!gameState.hints || gameState.hints <= 0) {
+    showBonusOverlay('🚫 Hết lượt gợi ý!');
     return;
   }
 
-  if (gameState.hintCount > 0) {
-    gameState.isLocked = true;
-    gameState.hintCount--;
-    updateHint(gameState.hintCount);
+  const tiles = document.querySelectorAll('.tile:not(.matched)');
+  const tilePairs = {};
 
-    const tiles = document.querySelectorAll('.tile.hidden');
-    let foundHint = false;
-    let hintTile1 = null;
-    let hintTile2 = null;
-
-    for (let i = 0; i < tiles.length; i++) {
-      for (let j = i + 1; j < tiles.length; j++) {
-        if (tiles[i].dataset.imgId === tiles[j].dataset.imgId) {
-          hintTile1 = tiles[i];
-          hintTile2 = tiles[j];
-          foundHint = true;
-          break;
-        }
-      }
-      if (foundHint) break;
+  tiles.forEach((tile) => {
+    const imageId = tile.dataset.imageId;
+    if (!tilePairs[imageId]) {
+      tilePairs[imageId] = [tile];
+    } else {
+      tilePairs[imageId].push(tile);
     }
+  });
 
-    if (!foundHint) {
-      alert('❌ Không còn cặp nào để gợi ý!');
-      gameState.isLocked = false;
+  for (let imageId in tilePairs) {
+    if (tilePairs[imageId].length >= 2) {
+      const [t1, t2] = tilePairs[imageId];
+
+      simulateTileMatch(t1, t2);
+
+      gameState.hints--;
+      updateHintDisplay(gameState.hints);
       return;
     }
-
-    tiles.forEach((tile) => tile.classList.remove('hidden'));
-
-    startHintCountdown(() => {
-      tiles.forEach((tile) => {
-        if (tile !== hintTile1 && tile !== hintTile2) {
-          tile.classList.add('hidden');
-        }
-      });
-
-      hintTile1.classList.remove('hidden');
-      hintTile2.classList.remove('hidden');
-
-      drawLineBetweenTiles(hintTile1, hintTile2);
-
-      gameState.isLocked = false;
-    });
-  } else {
-    alert('💡 Bạn đã hết lượt gợi ý!');
   }
+
+  showBonusOverlay('😕 Không tìm thấy cặp nào để gợi ý!');
 }
 
-// Khi thắng 1 màn sẽ gọi hàm này
-export function onLevelComplete() {
-  roundsWon++;
-  if (roundsWon >= 3 && gridSize < 12) {
-    gridSize += 2;
-    roundsWon = 0;
-  }
-  gameState.level++;
-  setupLevel();
+/**
+ * Gợi ý: Tự động ghép cặp 2 ô
+ */
+function simulateTileMatch(tile1, tile2) {
+  const img1 = tile1.querySelector('img');
+  const img2 = tile2.querySelector('img');
+
+  if (img1) img1.classList.remove('hidden');
+  if (img2) img2.classList.remove('hidden');
+
+  tile1.classList.add('matched');
+  tile2.classList.add('matched');
+
+  gameState.score += 20;
+  updateScoreDisplay(gameState.score);
+
+  checkLevelComplete(); // ✅ kiểm tra xem đã hoàn thành màn chưa
 }
 
-// Gán sự kiện nút
+/**
+ * Gán sự kiện xác nhận cài đặt nếu tồn tại nút
+ */
+const confirmBtn = document.getElementById('confirm-settings-btn');
+if (confirmBtn) {
+  confirmBtn.onclick = () => {
+    gameState.hints = 30;
+    applySettingsAndStartGame();
+  };
+}
 
-document.getElementById('restart-btn')?.addEventListener('click', restartGame);
-document.getElementById('hint-btn')?.addEventListener('click', showHint);
+/**
+ * Gán sự kiện nút bắt đầu lại
+ */
+const restartBtn = document.getElementById('btn-restart');
+if (restartBtn) {
+  restartBtn.onclick = () => {
+    resetGame();
+    initializeLevel(1);
+  };
+}
 
-// Auto scale khi resize
-window.addEventListener('resize', autoScaleGame);
-
-// Khi DOM đã sẵn sàng, bắt đầu game
-
-document.addEventListener('DOMContentLoaded', () => {
-  autoScaleGame();
-  restartGame();
-});
+/**
+ * Gán sự kiện nút gợi ý
+ */
+const hintBtn = document.getElementById('btn-hint');
+if (hintBtn) {
+  hintBtn.onclick = handleHintClick;
+}

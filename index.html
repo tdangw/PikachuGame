@@ -2,58 +2,68 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pikachu Match Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pikachu Memory Match</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="header">
-    <div class="left-controls">
-      <button id="restart-btn">🔄 Bắt đầu lại</button>
-      <button id="hint-btn">💡 Gợi ý</button>
-      <span id="hint-container">
-        🎁 <span id="hint-count">30</span> <span id="hint-timer"></span>
-      </span>
-    </div>
-    <div class="title">
-      <img class="logo" src="assets/images/logo/logo.png" alt="Logo" />
-      Pikachu Memory Match V1.0
-      <img class="logo" src="assets/images/logo/logo.png" alt="Logo" />
-    </div>
-    <div class="right-info">
-      <span>⏱️ <span id="timer">00:00</span></span>
-      <span>⭐ Điểm: <span id="score">0</span></span>
+  <!-- 🌌 Menu chính sẽ được tạo bằng JavaScript (mainmenu.js) -->
+
+  <!-- ⚙️ Menu cài đặt độ khó -->
+  <div id="difficulty-overlay" class="overlay" style="display: none;">
+    <div class="modal">
+      <h2>Chọn chế độ chơi</h2>
+      <div class="difficulty-buttons">
+        <button class="difficulty-btn" data-level="1">Dễ</button>
+        <button class="difficulty-btn" data-level="4">Bình thường</button>
+        <button class="difficulty-btn" data-level="12">Khó</button>
+      </div>
+      <button onclick="closeDifficultyOverlay()">❌ Hủy</button>
     </div>
   </div>
 
-  <div id="game-board" class="grid-container"></div>
+  <!-- 🎮 Vùng chơi game -->
+  <div class="main-wrapper">
+    <div id="game-container" style="display: none;">
+      <!-- Thông tin tiêu đề game -->
+      <div id="game-title">
+        <button id="btn-restart">🔄 Bắt đầu lại</button>
+        <button id="btn-hint">💡 Gợi ý</button>
+        <span id="hint">💡 Gợi ý: 30</span>
+        <span id="game-logo">🎮 Pikachu Memory Match V1.0</span>
+        <span id="timer">⏱️ 00:00</span>
+        <span id="score-title">⭐ Điểm: <span id="score">0</span></span>
+        <span id="current-level">Level:<span id="level">1</span></span>
+      </div>
 
-  <!-- ✅ Di chuyển lớp hiệu ứng vào <body> -->
-  <div id="effect-layer"></div>
+      <!-- Lưới ô hình -->
+      <div id="grid-container"></div>
+    </div>
+  </div>
 
+  <!-- 📦 Import các module JS -->
+  <script type="module" src="js/utils.js"></script>
+  <script type="module" src="js/gameState.js"></script>
+  <script type="module" src="js/ui.js"></script>
+  <script type="module" src="js/grid.js"></script>
+  <script type="module" src="js/logic.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/mainmenu.js"></script>
+  <script type="module" src="js/bonusTile.js"></script>
 </body>
 </html>
-<!--
-  - Tên trò chơi: Pikachu Memory Match
-  - Phiên bản: 1.0
-  - Tác giả: Nguyễn Văn A
-  - Ngày phát hành: 01/01/2023
-  - Mô tả: Trò chơi ghép đôi Pikachu, người chơi cần tìm và ghép các cặp hình giống nhau.
-  - Công nghệ sử dụng: HTML, CSS, JavaScript
-  - Thư viện: jQuery, Bootstrap
-  - Hướng dẫn sử dụng:
-    1. Nhấn nút "Bắt đầu lại" để bắt đầu trò chơi mới.
-    2. Nhấn nút "Gợi ý" để nhận gợi ý về các cặp hình giống nhau.
-    3. Nhấn vào các ô để mở hình và tìm cặp giống nhau.
-    4. Khi tìm đủ cặp, trò chơi sẽ kết thúc và hiển thị điểm số.
-  - Lưu ý:
-    - Trò chơi có thể có nhiều cấp độ khác nhau với số lượng ô và thời gian khác nhau.
-    - Người chơi có thể tùy chỉnh độ khó của trò chơi bằng cách chọn số lượng ô và thời gian.
-    - Trò chơi có thể được phát triển thêm với nhiều tính năng mới như chế độ chơi nhiều người, bảng xếp hạng, v.v.
-  - Tài nguyên:
-    - Hình ảnh Pikachu: assets/images/pikachu/
-    - Logo: assets/images/logo/logo.png
-    - Âm thanh: assets/sounds/
-    - Thư viện: assets/libs/
-  - Cảm ơn bạn đã chơi trò chơi của chúng tôi! Chúc bạn có những giây phút vui vẻ!
+<!--âm thanh-->
+<div id="settings-container" style="display: none;">
+  <h2 class="settings-title">Cài đặt</h2>
+
+  <div class="settings-option center-option">
+    <label class="toggle-switch">
+      <input type="checkbox" id="toggle-sound" checked>
+      <span class="slider"></span>
+      <span class="label">Âm thanh</span>
+    </label>
+  </div>
+
+  <button id="btn-back-menu" class="settings-btn back-menu-btn">🔙 Quay về menu chính</button>
+</div>
+

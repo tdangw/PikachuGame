@@ -1,326 +1,341 @@
-/* ==== BIẾN MÀU ==== */
-:root {
-  --primary-green: #4caf50;
-  --border-blue: #447db3;
-  --hint-orange: rgba(255, 165, 0, 0.8);
-  --matched-opacity: 0.5;
-  --tile-hover-scale: 1.05;
-}
+/* 🌟 Pikachu Memory Match - CSS Tổng thể */
 
-/* ==== GIAO DIỆN CHUNG ==== */
+/* === Layout toàn trang === */
 body {
+  font-family: 'Segoe UI', sans-serif;
   margin: 0;
-  font-family: Arial, sans-serif;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('assets/images/background.png');
-  background-size: 200% 200%;
-  background-position: center;
-  background-repeat: no-repeat;
-  animation: backgroundMove 10s infinite linear;
+  padding: 0;
+  background-color: #f4f4f4;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-@keyframes backgroundMove {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 100% 100%; }
-}
-
-/* ==== HEADER ==== */
-.header {
+/* === Wrapper chính chứa game === */
+.main-wrapper {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  width: 90%;
-  padding: 10px;
-  background-color: #f0d9c1;
-  border-bottom: 2px solid #85cc85;
-}
-
-.left-controls button,
-.right-info span {
-  margin: 0 10px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #2e7d32;
-}
-
-.right-info span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* ==== GỢI Ý ==== */
-#hint-container {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-left: 10px;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-#hint-icon {
-  width: 24px;
-  height: 24px;
-}
-
-#hint-count {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-#hint-timer {
-  margin-left: 10px;
-  padding: 2px 6px;
-  background-color: var(--hint-orange);
-  color: white;
-  border-radius: 5px;
-  font-weight: bold;
-  display: none;
-}
-
-/* ==== LOGO ==== */
-.logo {
-  width: 24px;
-  height: 24px;
-  vertical-align: middle;
-  margin: 0 5px;
-}
-
-/* ==== GAME CONTAINER ==== */
-#game-container {
+  justify-content: flex-start;
+  max-width: 100vw;
   width: 100%;
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: auto;
-  padding: 20px 0;
 }
 
-/* ==== LƯỚI GAME ==== */
-#game-board {
+/* === Game Container === */
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #e9ecef;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  margin-top: 30px;
+  max-width: 95vw;
+}
+
+/* === Game Header === */
+#game-title {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px 20px;
+  background-color: #fff;
+  width: 100%;
+  max-width: 1080px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+#game-title span,
+#game-title button {
+  font-size: 1rem;
+  white-space: nowrap;
+  margin: 5px 10px;
+}
+
+/* === Nút chung === */
+button {
+  padding: 10px 16px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover,
+.menu-item:hover,
+.difficulty-btn:hover,
+.back-menu-btn:hover {
+  transform: scale(1.05);
+}
+button:active {
+  transform: scale(0.95);
+}
+
+/* === Lưới game === */
+#grid-container {
   display: grid;
   gap: 8px;
   justify-content: center;
-  align-content: center;
-  width: min(95vw, 90vh);
-  aspect-ratio: 1 / 1;
-  background-image: url('assets/images/grid-background.png');
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-radius: 10px;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  background-color: #adc3d9;
+  padding: 10px;
+  border-radius: 12px;
+  width: 90vmin;
+  height: 90vmin;
+  box-sizing: border-box;
+  margin: 0 auto;
 }
 
-/* ==== Ô TRONG LƯỚI ==== */
+/* === Tile ô hình === */
 .tile {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #fff;
+  border-radius: 8px;
+  transition: transform 0.2s ease, border 0.2s ease;
   position: relative;
-  background-color: white;
-  border: 1px solid var(--border-blue);
-  border-radius: 5px;
-  overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease;
   display: flex;
   justify-content: center;
   align-items: center;
-  aspect-ratio: 1 / 1;
-  width: 100%;
+  overflow: hidden;
+  border: 3px solid transparent;
 }
-
+.tile:hover {
+  opacity: 0.95;
+}
 .tile img {
-  width: 90%;
-  height: 90%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
-
-.tile.hidden img {
+.tile img.hidden {
   display: none;
 }
 
+/* ✅ Ghép đúng */
 .tile.matched {
-  opacity: var(--matched-opacity);
+  opacity: 0.5;
   pointer-events: none;
-  transform: scale(0.95);
-  transition: all 0.3s ease;
+  border-color: #28a745;
+  box-shadow: 0 0 8px #28a74599;
 }
 
-.tile.selected {
-  outline: 3px solid var(--primary-green);
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
-  z-index: 2;
-}
-
+/* ❌ Ghép sai */
 .tile.wrong {
-  animation: shakeTile 0.4s ease;
-  outline: 3px solid red;
+  animation: shake 0.5s;
+  border-color: #dc3545;
+  box-shadow: 0 0 6px #dc354599;
 }
 
-.tile:hover {
-  transform: scale(var(--tile-hover-scale));
-  z-index: 1;
+/* 🎯 Ô lẻ glowing */
+.tile.bonus-tile {
+  border: 2px dashed #ffd700;
+  box-shadow: 0 0 12px #ffce00cc, 0 0 6px #ff9800cc;
+  animation: glowPulse 1.2s ease-in-out infinite;
 }
 
-@keyframes shakeTile {
-  0% { transform: translateX(0); }
-  20% { transform: translateX(-5px); }
-  40% { transform: translateX(5px); }
-  60% { transform: translateX(-5px); }
-  80% { transform: translateX(5px); }
-  100% { transform: translateX(0); }
+/* Level 1 ô duy nhất */
+.tile.single-tile {
+  max-width: 240px;
+  margin: auto;
+  box-shadow: 0 0 12px #ffd700cc, 0 0 6px #ffa500cc;
 }
 
-/* ==== Ô LẺ NHẬN THƯỞNG ==== */
-.tile.last-tile-bonus {
-  animation: glow-bonus 1.5s ease-in-out infinite alternate,
-             scale-pulse 1s ease-in-out 3,
-             shake 0.5s ease-in-out 3;
-  border: 3px solid gold;
-  z-index: 20;
-  position: relative;
-  overflow: visible;
+/* === Modal & Overlay === */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.4s ease-in-out;
+}
+.modal {
+  background-color: #fff;
+  padding: 24px 32px;
+  border-radius: 12px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  animation: dropIn 0.4s ease;
+}
+.modal h2 {
+  margin-bottom: 10px;
+  font-size: 1.4rem;
+}
+.modal p {
+  margin-bottom: 20px;
+}
+.modal button {
+  background-color: #4CAF50;
+  border-radius: 6px;
+}
+.modal button:hover {
+  background-color: #45a049;
 }
 
-@keyframes glow-bonus {
-  0% { box-shadow: 0 0 10px 5px #ffd700; }
-  100% { box-shadow: 0 0 30px 15px #ffec8b; }
-}
-
-@keyframes scale-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
-}
-
-/* ==== BONUS PARTICLE ==== */
-.particle {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, #fff, #ff0);
-  border-radius: 50%;
-  opacity: 0.9;
-  pointer-events: none;
-  animation: particle-fly 1.2s ease-out forwards;
-  z-index: 999;
-}
-
-@keyframes particle-fly {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100px) scale(0.5);
-    opacity: 0;
-  }
-}
-
-/* ==== GLOW ĐẶC BIỆT ==== */
-.bonus-glow {
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  border-radius: 10px;
-  background: radial-gradient(circle, rgba(255,255,0,0.6) 0%, rgba(255,255,0,0.2) 70%, transparent 100%);
-  animation: pulseGlow 1s infinite ease-in-out;
-  z-index: -1;
-  pointer-events: none;
-}
-
-@keyframes pulseGlow {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.7; }
-}
-
-/* ==== OVERLAY LEVEL MỚI ==== */
-.level-start-overlay {
+/* === Menu chính === */
+.menu-overlay {
   position: fixed;
   top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(30, 30, 30, 0.8);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0,0,0,0.6), rgba(0,0,0,0.8));
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   z-index: 2000;
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.5s ease-in-out;
+}
+.game-title {
+  font-size: 2.5rem;
+  color: #fff;
+  text-shadow: 2px 2px 4px #000;
+  margin-bottom: 30px;
+}
+.menu-list {
+  list-style: none;
+  padding: 0;
+}
+.menu-item {
+  font-size: 1.4rem;
+  padding: 14px 28px;
+  margin: 10px;
+  background-color: #1e90ff;
+  color: #fff;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.menu-item:hover {
+  background-color: #00bfff;
+  text-shadow: 1px 1px 3px #000;
 }
 
-.level-box {
-  background-color: #ffffff;
-  padding: 30px 40px;
-  border-radius: 20px;
-  text-align: center;
-  box-shadow: 0 0 20px #00ccff;
-  font-size: 20px;
+/* === Cài đặt nâng cao === */
+.difficulty-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+.difficulty-btn {
+  padding: 12px 20px;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  background-color: #1e90ff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
 }
 
-.level-box h2 {
-  margin: 0 0 10px;
-  color: #00aaff;
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.toggle-switch input {
+  display: none;
+}
+.toggle-switch .slider {
+  width: 50px;
+  height: 26px;
+  background-color: #ccc;
+  border-radius: 34px;
+  position: relative;
+  transition: background-color 0.3s;
+  margin-right: 10px;
+}
+.toggle-switch .slider::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 2px;
+  top: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+.toggle-switch input:checked + .slider {
+  background-color: #4CAF50;
+}
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+.toggle-switch .label {
+  font-size: 1.1rem;
+  user-select: none;
+}
+
+.center-option {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.back-menu-btn {
+  background-color: #6c757d;
+  color: white;
+  padding: 12px 24px;
+  font-size: 1.1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.back-menu-btn:hover {
+  background-color: #5a6268;
+}
+
+/* === Hiệu ứng animation === */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* ==== LỚP HIỆU ỨNG TOÀN MÀN ==== */
-#effect-layer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 3000;
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
-/* ==== RESPONSIVE ==== */
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+@keyframes dropIn {
+  0%   { opacity: 0; transform: translateY(-30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
 
-  .title-container {
-    flex-direction: column;
-    margin: 10px 0;
-  }
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 8px #ffce00aa; }
+  50% { box-shadow: 0 0 16px #ff9800ff; }
+  100% { box-shadow: 0 0 8px #ffce00aa; }
+}
 
-  .title-container .logo {
-    max-width: 40px;
-  }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  #game-board {
-    width: 90vw;
-    gap: 5px;
-  }
-
-  button {
-    font-size: 14px;
-    padding: 8px 16px;
-  }
+@keyframes slideUp {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-20px); }
 }
